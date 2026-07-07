@@ -1,0 +1,51 @@
+# Model roster configuration for Hermes Multi-Agent Orchestrator
+# OpenCode Zen — Free Tier
+
+models:
+  architect:
+    picker_name: "Big Pickle Med"
+    api_model: ""  # TBD — set from OpenCode Zen provider picker
+    default_role: "architect"
+    strengths: "architecture, creativity, meta-planning"
+    limitations: ""
+
+  planner:
+    picker_name: "Deepseek V4 Flash Free Max"
+    api_model: "deepseek-v4-flash"
+    default_role: "planner, researcher, arbiter"
+    strengths: "speed, balanced, reliable"
+    limitations: ""
+
+  coder:
+    picker_name: "North Mini Code Free Med"
+    api_model: ""  # TBD — set from OpenCode Zen provider picker
+    default_role: "coder"
+    strengths: "code, technical tasks"
+    limitations: "weaker outside code"
+
+  synthesizer:
+    picker_name: "Mimo V2.5 Free Med"
+    api_model: "minimax-m2.5"
+    default_role: "synthesizer"
+    strengths: "creativity, generation, text"
+    limitations: "not for code"
+
+  reviewer:
+    picker_name: "Nemotron 3 Ultra Free Max"
+    api_model: "nemotron-3-ultra"
+    default_role: "reviewer"
+    strengths: "deep analysis, reasoning"
+    limitations: "timeouts on long prompts (>200 words)"
+
+modes:
+  council:
+    description: "All agents in parallel → Arbiter synthesizes"
+    when: "research, comparison, multi-perspective"
+
+  pipeline:
+    description: "Sequential stages A → B → C → D"
+    when: "code review, document writing, translation"
+
+  hybrid:
+    description: "Parallel first round, sequential second"
+    when: "complex mixed tasks (research + code)"
