@@ -1,41 +1,36 @@
-# Model roster configuration for Hermes Multi-Agent Orchestrator
-# OpenCode Zen — Free Tier
+# Model roster — Hermes Multi-Agent Orchestrator
+# OpenCode Zen — Free Tier (opencode CLI model IDs)
 
 models:
   architect:
     picker_name: "Big Pickle Med"
-    api_model: ""  # TBD — set from OpenCode Zen provider picker
+    api_model: "opencode/big-pickle"
     default_role: "architect"
     strengths: "architecture, creativity, meta-planning"
-    limitations: ""
 
   planner:
-    picker_name: "Deepseek V4 Flash Free Max"
-    api_model: "deepseek-v4-flash"
+    picker_name: "Deepseek V4 Flash"
+    api_model: "opencode/deepseek-v4-flash-free"
     default_role: "planner, researcher, arbiter"
     strengths: "speed, balanced, reliable"
-    limitations: ""
 
   coder:
-    picker_name: "North Mini Code Free Med"
-    api_model: ""  # TBD — set from OpenCode Zen provider picker
+    picker_name: "North Mini Code"
+    api_model: "opencode/north-mini-code-free"
     default_role: "coder"
     strengths: "code, technical tasks"
-    limitations: "weaker outside code"
 
   synthesizer:
-    picker_name: "Mimo V2.5 Free Med"
-    api_model: "minimax-m2.5"
+    picker_name: "Mimo V2.5"
+    api_model: "opencode/mimo-v2.5-free"
     default_role: "synthesizer"
     strengths: "creativity, generation, text"
-    limitations: "not for code"
 
   reviewer:
-    picker_name: "Nemotron 3 Ultra Free Max"
-    api_model: "nemotron-3-ultra"
+    picker_name: "Nemotron 3 Ultra"
+    api_model: "opencode/nemotron-3-ultra-free"
     default_role: "reviewer"
     strengths: "deep analysis, reasoning"
-    limitations: "timeouts on long prompts (>200 words)"
 
 modes:
   council:
