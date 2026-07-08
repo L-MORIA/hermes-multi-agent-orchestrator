@@ -1,51 +1,49 @@
 # Hermes Multi-Agent Orchestrator — Architecture
 
+> Архитектура multi-agent оркестратора на 5 моделях OpenCode Zen.
+> 3 режима (Council, Pipeline, Hybrid), 5 ролей.
+> Подтверждено смок-тестом — см. TEST_RESULTS.md.
+
 ## System Architecture
 
 ```mermaid
 flowchart TD
-    subgraph User["👤 User Request"]
-        TASK[Complex Task]
+    subgraph User["👤 Пользователь"]
+        TASK[Сложная задача]
     end
 
-    subgraph Orchestrator["🐝 Orchestrator (Hermes Agent)"]
+    subgraph Orchestrator["🐝 Orchestrator"]
+        direction LR
         ARCH[🎯 Architect<br/>Big Pickle Med<br/>→ декомпозиция]
-        PLAN[📋 Planner<br/>Deepseek V4 Flash<br/>→ детальный план]
+        PLAN[📋 Planner<br/>Deepseek V4 Flash<br/>→ план]
     end
 
-    subgraph Council["🤖 Council Mode — Parallel"]
+    subgraph Parallel["🤖 Council — параллельные агенты"]
         R1[🔍 Researcher A<br/>Deepseek V4 Flash]
-        R2[🔍 Researcher B<br/>Deepseek V4 Flash]
+        R2[🔍 Researcher B<br/>Mimo V2.5]
         CD[💻 Coder<br/>North Mini Code]
-        WR[✍️ Writer<br/>Mimo V2.5]
     end
 
-    subgraph Synthesis["✍️ Synthesis"]
-        SYN[✍️ Synthesizer<br/>Mimo V2.5<br/>→ сборка результатов]
-    end
-
-    subgraph Review["🔎 Review"]
-        REV[🔎 Reviewer<br/>Nemotron 3 Ultra<br/>→ финальная проверка]
+    subgraph Synthesis["✍️→👑 Синтез"]
+        SYN[✍️ Synthesizer<br/>Mimo V2.5<br/>→ черновая сборка]
+        ARB[👑 Arbiter<br/>Nemotron 3 Ultra<br/>→ финальный синтез]
     end
 
     TASK --> ARCH
     ARCH --> PLAN
-
-    PLAN --> Council
-    
-    Council --> SYN
-    SYN --> REV
-    REV --> RESULT[✅ Final Response]
+    PLAN --> Parallel
+    Parallel --> SYN
+    SYN --> ARB
+    ARB --> RESULT[✅ Результат]
 ```
 
 ## Pipeline Mode
 
 ```mermaid
 flowchart LR
-    A[🎯 Architect<br/>Big Pickle] --> P[📋 Planner<br/>Deepseek]
-    P --> C[💻 Coder<br/>North Mini Code]
-    C --> S[✍️ Synthesizer<br/>Mimo]
-    S --> R[🔎 Reviewer<br/>Nemotron]
+    A[🎯 Architect<br/>Big Pickle] --> P[💻 Coder<br/>North Mini Code]
+    P --> S[✍️ Synthesizer<br/>Mimo]
+    S --> R[👑 Arbiter<br/>Nemotron]
     R --> DONE[✅ Done]
 ```
 
@@ -54,77 +52,84 @@ flowchart LR
 ```mermaid
 flowchart TD
     A[🎯 Architect<br/>Big Pickle] --> P[📋 Planner<br/>Deepseek]
-    P --> PARA{Parallel Round}
+    P --> PARA{Параллельный раунд}
     PARA --> R1[🔍 Researcher<br/>Deepseek]
-    PARA --> C1[💻 Coder<br/>North Mini Code]
+    PARA --> C1[💻 Coder<br/>North Mini]
     R1 --> SYN[✍️ Synthesizer<br/>Mimo]
     C1 --> SYN
-    SYN --> REV[🔎 Reviewer<br/>Nemotron]
-    REV --> DONE[✅ Done]
+    SYN --> ARB[👑 Arbiter<br/>Nemotron]
+    ARB --> DONE[✅ Done]
 ```
 
 ## Model Roster
 
-| Псевдоним | API Model ID | Роль по умолчанию | Сильные стороны | Лимитации |
-|-----------|-------------|-------------------|----------------|-----------|
-| `big-pickle` | ? | 🎯 Architect | Архитектура, креатив, мета-планирование | Не тестировался на длинных промптах |
-| `deepseek` | `deepseek-v4-flash` | 📋 Planner / 🔍 Researcher / 👑 Arbiter | Скорость, balanced, надёжность | Базовая модель |
-| `north-mini` | ? | 💻 Coder | Код, технические задачи | Специализирован, вне кода слабее |
-| `mimo` | `minimax-m2.5` | ✍️ Synthesizer | Креативность, текст, генерация | Не для кода |
-| `nemotron` | `nemotron-3-ultra` | 🔎 Reviewer | Глубокий анализ, рассуждения | **Таймауты на >200 слов**, нестабилен |
+| Псевдоним | Model ID (CLI) | Роль | Сильные стороны |
+|-----------|---------------|------|----------------|
+| `big-pickle` | `opencode/big-pickle` | 🎯 Architect | Архитектура, креатив, мета-планирование |
+| `deepseek` | `opencode/deepseek-v4-flash-free` | 📋 Planner / 🔍 Researcher | Скорость, сбалансированность |
+| `mimo` | `opencode/mimo-v2.5-free` | ✍️ Synthesizer | Креативность, генерация |
+| `nemotron` | `opencode/nemotron-3-ultra-free` | 👑 Arbiter / 🔎 Reviewer | Глубокий анализ, синтез |
+| `north-mini` | `opencode/north-mini-code-free` | 💻 Coder | Код, файловые операции |
 
-## Mode Routing Logic
+## Mode Routing
 
 ```
 Задача получена
   │
   ├── Research / Comparison / Multi-perspective
-  │   └── 🤖 Council — параллельные исследователи → синтез
+  │   └── 🤖 Council — параллельные исследователи → Arbiter
   │
   ├── Code / Document / Pipeline
-  │   └── 🔧 Pipeline — Architect → Planner → Coder → Synthesizer → Reviewer
+  │   └── 🔧 Pipeline — Architect → Coder → Synthesizer → Arbiter
   │
   └── Complex (research + code + analysis)
       └── 🎭 Hybrid — сначала параллель, потом последовательно
 ```
 
-## Delegation Flow
+## Поток выполнения
 
-```python
-# Council mode
-tasks = [
-    {"goal": "Исследуй аспект A...", "context": "..."},
-    {"goal": "Исследуй аспект B...", "context": "..."},
-    {"goal": "Исследуй аспект C...", "context": "..."},
-]
-delegate_task(tasks=tasks)
+### Шаг 1: Architect (Big Pickle Med)
+- Декомпозиция задачи
+- Выбор режима (Council/Pipeline/Hybrid)
+- Определение количества и ролей агентов
 
-# Pipeline mode
-result1 = delegate_task(goal="Architect: разбей задачу...")
-result2 = delegate_task(goal="Coder: реализуй...", context=result1)
-result3 = delegate_task(goal="Reviewer: проверь...", context=result2)
-```
+### Шаг 2: Parallel Execution (Council) / Sequential (Pipeline)
+- Каждый агент запускается через `opencode run --model <model-id>`
+- В Council — все параллельно через `&`
+- В Pipeline — последовательно с передачей `context`
 
-## Directory Structure
+### Шаг 3: Synthesis (Mimo V2.5 → Nemotron 3 Ultra)
+- Mimo делает черновую сборку результатов
+- Nemotron делает финальный глубокий синтез
+
+### Шаг 4: Delivery
+- Сохранение `.md` файла
+- Отправка пользователю
+
+## Тестирование
+
+Все 5 моделей протестированы. Результаты — в `TEST_RESULTS.md`.
+
+Ключевые выводы:
+1. **Big Pickle Med** — отличный архитектор (структура, 10 осей, мета-планирование)
+2. **Deepseek V4 Flash** — глубокий фактологический research
+3. **Mimo V2.5** — хороший синтезатор, креативная сборка
+4. **Nemotron 3 Ultra** — лучший арбитр (глубокий синтез, 7 сценариев выбора)
+5. **North Mini Code** — пишет реальный код, создаёт файлы на диске
+
+## Директория проекта
 
 ```
 hermes-multi-agent-orchestrator/
-├── SKILL.md              # Основной скилл (EN инструкции)
-├── ARCHITECTURE.md       # Архитектура, схемы, роли  
+├── SKILL.md              # Основной скилл
+├── ARCHITECTURE.md       # Архитектура и схемы
 ├── AGENTS.md             # Инструкции для AI-агентов
 ├── CHANGELOG.md          # История версий
+├── TEST_RESULTS.md       # Результаты тестов
 ├── README.md             # Документация EN
 ├── README.ru.md          # Документация RU
 ├── config/
-│   └── models.yaml       # Модели и роли
+│   └── models.yaml       # Конфиг моделей
 └── scripts/
-    └── plan.sh           # Шаблон объявления плана
+    └── run.sh            # Скрипт запуска
 ```
-
-## Pitfalls
-
-1. **Nemotron timeout** — при длинных контекстах заменять на Deepseek
-2. **Sub-agents blind** — параллельные агенты не видят друг друга
-3. **Activation first** — объявлять запуск до первой delegate_task
-4. **Synthesize output** — никогда не выводить сырые результаты агентов
-5. **Channel-aware delivery** — проверять куда отправлять результат

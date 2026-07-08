@@ -2,62 +2,80 @@
 
 **Multi-agent orchestration for Hermes Agent using OpenCode Zen free models.**
 
-Turn one agent into a team. Replace sequential work with parallelism. Use 5 specialized roles across 3 orchestration modes.
+Turn one agent into a team. Replace sequential work with parallelism.
+3 modes, 5 specialized roles, 5 different models — each with a unique strength.
+All models verified by smoke test.
 
 ## Models (OpenCode Zen — Free Tier)
 
-| Role | Model | Strength |
-|------|-------|----------|
-| 🎯 **Architect** | Big Pickle Med | Architecture, creativity, structure |
-| 📋 **Planner / 🔍 Researcher** | Deepseek V4 Flash Free Max | Speed, balance, reliability |
-| 💻 **Coder** | North Mini Code Free Med | Code, technical tasks |
-| ✍️ **Synthesizer** | Mimo V2.5 Free Med | Generation, creativity, assembly |
-| 🔎 **Reviewer** | Nemotron 3 Ultra Free Max | Deep analysis (⚠️ may timeout) |
+| Role | Model | Model ID | Strength |
+|------|-------|----------|----------|
+| 🎯 **Architect** | Big Pickle Med | `opencode/big-pickle` | Architecture, creativity, meta-planning |
+| 📋 **Planner / 🔍 Researcher** | Deepseek V4 Flash | `opencode/deepseek-v4-flash-free` | Speed, facts, logic |
+| ✍️ **Synthesizer** | Mimo V2.5 | `opencode/mimo-v2.5-free` | Creativity, generation, description |
+| 👑 **Arbiter / 🔎 Reviewer** | **Nemotron 3 Ultra** | `opencode/nemotron-3-ultra-free` | **Deep analysis, synthesis, validation** |
+| 💻 **Coder** | North Mini Code | `opencode/north-mini-code-free` | Code, file operations |
+
+> ⚠️ **Nemotron 3 Ultra is the Arbiter** — it performs the final synthesis of all agent results. Not Mimo, not Deepseek.
 
 ## Modes
 
 | Mode | Pattern | Use Case |
 |------|---------|----------|
-| 🤖 **Council** | All agents in parallel → Arbiter synthesizes | Research, comparison |
-| 🔧 **Pipeline** | Sequential stages A → B → C → D | Code review, document writing |
-| 🎭 **Hybrid** | Parallel first round, sequential second | Complex mixed tasks |
+| 🤖 **Council** | Parallel agents → Arbiter synthesizes | Research, comparison |
+| 🔧 **Pipeline** | Sequential A → B → C → Arbiter | Code review, documents |
+| 🎭 **Hybrid** | Parallel first, then sequential | Complex mixed tasks |
 
 ## Quick Start
 
-This is a **Hermes Agent Skill**. It works through `delegate_task`.
+### Council: Parallel Research
 
-### Example: Parallel Research (Council)
+```bash
+# 3 different models, running in parallel
+opencode run "Research LangChain architecture" --model "opencode/deepseek-v4-flash-free" &
+opencode run "Research CrewAI architecture" --model "opencode/mimo-v2.5-free" &
+opencode run "Design comparison structure" --model "opencode/big-pickle" &
+wait
 
-> User: *"Compare LangChain, CrewAI, and AutoGen"*
-
-1. 🎯 Architect (Big Pickle) breaks down the task
-2. 📋 Planner (Deepseek) creates detailed plan
-3. 🔍 3 Researchers (Deepseek) search in parallel
-4. ✍️ Synthesizer (Mimo) assembles final comparison
-5. 🔎 Reviewer (Nemotron) does final check
-
-### Example: Code Pipeline
-
-> User: *"Review and fix this code"*
-
-1. 🎯 Architect (Big Pickle) — analyze structure
-2. 📋 Planner (Deepseek) — plan changes
-3. 💻 Coder (North Mini Code) — implement fixes
-4. 🔎 Reviewer (Nemotron) — final review
-
-## Architecture
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for full diagrams.
-
+# Arbiter synthesizes results
+opencode run "Synthesize: $(cat results)" --model "opencode/nemotron-3-ultra-free"
 ```
-User → 🎯 Architect → 📋 Planner → [Parallel Agents] → ✍️ Synthesizer → 🔎 Reviewer → User
+
+### Pipeline: Code Generation
+
+```bash
+opencode run "Design CSV parser" --model "opencode/big-pickle" > arch.md
+opencode run "Implement the parser" --model "opencode/north-mini-code-free" --context "$(cat arch.md)"
 ```
+
+### Using scripts/run.sh
+
+```bash
+bash scripts/run.sh council \
+  "Big Pickle Med:Design architecture" \
+  "Deepseek V4 Flash:Research topic" \
+  "Mimo V2.5:Research topic"
+
+bash scripts/run.sh pipeline "context" \
+  "Big Pickle Med:design" \
+  "North Mini Code:code"
+```
+
+## Test Results
+
+All 5 models tested. Full results in [TEST_RESULTS.md](TEST_RESULTS.md).
+
+Key findings:
+- **Nemotron 3 Ultra** → best Arbiter (deep synthesis, 7 comparison axes, 7 scenarios)
+- **Big Pickle Med** → strong architect (10 evaluation axes, mermaid diagrams)
+- **Deepseek V4 Flash** → deep factual research
+- **Mimo V2.5** → good synthesizer (handles Russian, creative)
+- **North Mini Code** → writes real code, creates files on disk
 
 ## Installation
 
-Copy to Hermes skills directory:
-
 ```bash
+git clone https://github.com/L-MORIA/hermes-multi-agent-orchestrator.git
 cp -r hermes-multi-agent-orchestrator ~/.hermes/skills/
 /reload-skills
 ```
@@ -67,15 +85,16 @@ cp -r hermes-multi-agent-orchestrator ~/.hermes/skills/
 | File | Description |
 |------|-------------|
 | `SKILL.md` | Main skill with orchestration logic |
-| `ARCHITECTURE.md` | Architecture, diagrams, roles |
+| `ARCHITECTURE.md` | Architecture, mermaid diagrams, roles |
 | `AGENTS.md` | AI agent instructions |
-| `README.md` | This file |
-| `README.ru.md` | Russian documentation |
+| `TEST_RESULTS.md` | Smoke test results |
 | `config/models.yaml` | Model roster configuration |
+| `scripts/run.sh` | Council and Pipeline launcher |
 
 ## Pitfalls
 
-- **Nemotron 3 Ultra** may timeout on long contexts → fallback to Deepseek
+- **Nemotron 3 Ultra may timeout** on contexts >5000 tokens → split input
 - **Parallel agents are isolated** — dependent work needs a second round
 - **Announce before work** — tell the user activation is happening
-- **Never paste raw agent output** — always synthesize
+- **Never paste raw agent output** — always synthesize via Arbiter
+- **Use `2>&1` not `2>/dev/null`** in opencode run — stderr has important info

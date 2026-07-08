@@ -2,9 +2,10 @@
 name: hermes-multi-agent-orchestrator
 description: >-
   Multi-agent orchestration for Hermes Agent using OpenCode Zen free models.
-  5 proven patterns: Council (parallel), Pipeline (sequential), Hybrid.
-  Roles: Architect (Big Pickle Med), Planner/Researcher (Deepseek V4 Flash),
-  Coder (North Mini Code), Synthesizer (Mimo V2.5), Reviewer (Nemotron 3 Ultra).
+  3 modes: Council (parallel), Pipeline (sequential), Hybrid.
+  5 roles, 5 models: Big Pickle Med, Deepseek V4 Flash, Mimo V2.5,
+  Nemotron 3 Ultra (Arbiter), North Mini Code.
+  Tested and verified — see TEST_RESULTS.md.
 version: 1.0.0
 author: L-MORIA
 tags: [multi-agent, orchestration, parallel, delegation, ensemble, council, pipeline]
@@ -26,55 +27,57 @@ environments: [opencode-zen]
 
 ## Доступные модели (OpenCode Zen — бесплатные)
 
-| Модель (пикер) | Модель (API) | Роль | Сильные стороны |
-|----------------|--------------|------|----------------|
-| **Big Pickle Med** | ? | 🎯 **Architect** | Архитектура, креатив, структура решения |
-| **Deepseek V4 Flash Free Max** | `deepseek-v4-flash` | 📋 **Planner** / 🔍 **Researcher** / 👑 **Arbiter** | Основная, быстрая, сбалансированная |
-| **North Mini Code Free Med** | ? | 💻 **Coder** | Код, технические задачи |
-| **Mimo V2.5 Free Med** | `minimax-m2.5` | ✍️ **Synthesizer** | Креативность, генерация, сборка |
-| **Nemotron 3 Ultra Free Max** | `nemotron-3-ultra` | 🔎 **Reviewer** | Глубокий анализ (осторожно: таймауты на длинных промптах) |
+| Модель (пикер) | Model ID (CLI) | Роль | Сильные стороны |
+|----------------|----------------|------|----------------|
+| **Big Pickle Med** | `opencode/big-pickle` | 🎯 **Architect** | Архитектура, креатив, мета-планирование |
+| **Deepseek V4 Flash** | `opencode/deepseek-v4-flash-free` | 📋 **Planner** / 🔍 **Researcher** | Скорость, факты, логика |
+| **Mimo V2.5** | `opencode/mimo-v2.5-free` | ✍️ **Synthesizer** | Креатив, генерация, описание |
+| **Nemotron 3 Ultra** | `opencode/nemotron-3-ultra-free` | 👑 **Arbiter** 🔎 **Reviewer** | Глубокий анализ, синтез, валидация |
+| **North Mini Code** | `opencode/north-mini-code-free` | 💻 **Coder** | Код, файловые операции |
+
+> Все 5 моделей проверены в смок-тесте. Подробности — в TEST_RESULTS.md.
 
 ## 3 режима работы
 
 ### 🤖 Council (параллельный)
 
 ```
-User → Architect (Big Pickle) → декомпозиция
-         ↓
-      [Deepseek Researcher] + [North Mini Coder] + [Mimo Writer] — ПАРАЛЛЕЛЬНО
-         ↓
-      Arbiter (Deepseek) → синтез результатов
-         ↓
-      Nemotron (Reviewer) → финальное ревью
-         ↓
-      User ← финальный ответ
+🎯 Architect (Big Pickle) → декомпозиция
+    ↓
+📋 Planner (Deepseek) → детальный план
+    ↓
+[🔍 Researcher A (Deepseek)] + [🔍 Researcher B (Mimo)] + [💻 Coder (North Mini)] — ПАРАЛЛЕЛЬНО
+    ↓
+✍️ Synthesizer (Mimo) → черновая сборка
+    ↓
+👑 Arbiter (Nemotron 3 Ultra) → финальный синтез, валидация
+    ↓
+Результат
 ```
 
-**Когда:** исследование, сравнение подходов, multi-perspective анализ  
+**Когда:** исследование, сравнение, multi-perspective анализ  
 **Скорость:** ~60% времени серийного подхода
 
 ### 🔧 Pipeline (последовательный)
 
 ```
-User → Big Pickle (Architect) → структура
-    → Deepseek (Planner) → план
-    → North Mini Code (Coder) → реализация
-    → Mimo (Synthesizer) → оформление
-    → Nemotron (Reviewer) → ревью
-    → User
+🎯 Architect (Big Pickle) → структура
+    → 📋 Planner (Deepseek) → план
+    → 💻 Coder (North Mini) → реализация
+    → ✍️ Synthesizer (Mimo) → оформление
+    → 👑 Arbiter (Nemotron 3 Ultra) → ревью
+    → Результат
 ```
 
-**Когда:** code review, перевод, написание документации  
-**Скорость:** медленнее, но качество выше
+**Когда:** code review, документы, перевод  
+**Качество:** выше за счёт последовательной валидации
 
 ### 🎭 Hybrid (смешанный)
 
 ```
-User → Big Pickle (Architect) → структура
-    → Deepseek (Planner) → детальный план
-    → [Coder + Researcher] — ПАРАЛЛЕЛЬНО (research-informed coding)
-    → Mimo (Synthesizer) → сборка
-    → Nemotron (Reviewer) → финал
+🎯 Architect → 📋 Planner
+    → [🔍 Researcher] + [💻 Coder] — ПАРАЛЛЕЛЬНО
+    → ✍️ Synthesizer → 👑 Arbiter
 ```
 
 **Когда:** сложные задачи с research + code
@@ -85,16 +88,15 @@ User → Big Pickle (Architect) → структура
 
 При получении задачи — **сразу ответить**, не начиная работу:
 
-> 🐝 **Multi-Agent Orchestrator активирован**  
+> 🐝 **Multi-Agent Orchestrator активирован**
 > Задача декомпозируется, собираю команду агентов...
 
 ### Шаг 1 — Декомпозиция (Big Pickle Med)
 
 Architect анализирует задачу, определяет:
-- Сколько агентов нужно
-- Какие роли
-- Какой режим (Council / Pipeline / Hybrid)
-- Какие модели для каких ролей
+- Режим (Council / Pipeline / Hybrid)
+- Какие роли и модели нужны
+- Количество агентов
 
 ### Шаг 2 — Объявление плана
 
@@ -102,66 +104,88 @@ Architect анализирует задачу, определяет:
 
 ```
 📋 План работы:
-┌──────────────┬────────────────────┬──────────────┐
-│ Роль         │ Модель             │ Задача       │
-├──────────────┼────────────────────┼──────────────┤
-│ 🎯 Architect │ Big Pickle Med     │ ...          │
-│ 🔍 Researcher│ Deepseek V4 Flash  │ ...          │
-│ 💻 Coder     │ North Mini Code    │ ...          │
-│ ✍️ Synthesizer│ Mimo V2.5        │ ...          │
-│ 🔎 Reviewer  │ Nemotron 3 Ultra   │ ...          │
-└──────────────┴────────────────────┴──────────────┘
-Режим: 🤖 Council / 🔧 Pipeline / 🎭 Hybrid
+┌──────────────┬────────────────────┬──────────────────┐
+│ Роль         │ Модель             │ Model ID         │
+├──────────────┼────────────────────┼──────────────────┤
+│ 🎯 Architect │ Big Pickle Med     │ big-pickle       │
+│ 🔍 Researcher│ Deepseek V4 Flash  │ deepseek-v4-...  │
+│ 💻 Coder     │ North Mini Code    │ north-mini-code  │
+│ ✍️ Synthesizer│ Mimo V2.5        │ mimo-v2.5-free   │
+│ 👑 Arbiter   │ Nemotron 3 Ultra   │ nemotron-3-...   │
+└──────────────┴────────────────────┴──────────────────┘
+Режим: 🤖 Council
 ```
 
-### Шаг 3 — Запуск
+### Шаг 3 — Запуск через opencode CLI
 
-- **Council:** `delegate_task` с goal для каждого агента, все параллельно
-- **Pipeline:** последовательные `delegate_task`, каждый следующий получает контекст предыдущего
-- **Hybrid:** первый раунд параллельно, второй — последовательно
+Для реального diversity моделей использовать `opencode run` с флагом `--model`:
 
-### Шаг 4 — Синтез
+```bash
+# Council: параллельный запуск с разными моделями
+opencode run "задача 1" --model "opencode/big-pickle" &
+opencode run "задача 2" --model "opencode/deepseek-v4-flash-free" &
+opencode run "задача 3" --model "opencode/mimo-v2.5-free" &
+wait
 
-Arbiter (Deepseek) собирает результаты:
-1. Исполнительная сводка (кто что сделал, время)
-2. Ключевые выводы (3-5最重要)
-3. Детали по темам (сгруппировано по смыслу, не по агентам)
-4. Рекомендации
+# Pipeline: последовательно с передачей контекста
+opencode run "архитектура" --model "opencode/big-pickle" > result.md
+opencode run "код" --model "opencode/north-mini-code-free" --context "$(cat result.md)"
+```
 
-### Шаг 5 — Ревью
+Или использовать `scripts/run.sh`:
+```bash
+bash scripts/run.sh council \
+  "Big Pickle Med:задача 1" \
+  "Deepseek V4 Flash:задача 2" \
+  "Mimo V2.5:задача 3"
+```
 
-Nemotron проверяет финальный ответ на:
-- Полноту
-- Точность
-- Согласованность
+### Шаг 4 — Синтез (Arbiter = Nemotron 3 Ultra)
+
+Nemotron собирает результаты всех агентов и выдаёт:
+1. Сводную таблицу / сравнение
+2. Ключевые выводы (3-5)
+3. Вердикт / рекомендации
+
+### Шаг 5 — Сохранение и доставка
+
+1. Сохранить `.md` файл
+2. Отправить пользователю
 
 ## Питфоллы
 
-1. **Nemotron 3 Ultra** может таймаутить на длинных промптах (>200 слов) — заменить на Deepseek V4 Flash
-2. **Агенты в одном раунде `delegate_task` не видят друг друга** — зависимые агенты запускать вторым раундом
-3. **Всегда сохранять .md файл** перед отправкой пользователю
-4. **Объявлять активацию ДО начала работы** — иначе пользователь видит молчание
-5. **Не выводить сырые результаты суб-агентов** — всегда синтезировать
+1. **Nemotron 3 Ultra** может таймаутить на контекстах >5000 токенов — разбивать на части
+2. **Параллельные агенты не видят друг друга** — зависимые задачи вторым раундом
+3. **Объявлять активацию ДО работы** — иначе пользователь видит молчание
+4. **Не выводить сырые результаты агентов** — всегда через арбитра
+5. **`2>/dev/null` не использовать** в opencode run — stderr содержит важную инфу
 
 ## Примеры
 
-### Пример 1: Исследование трёх фреймворков
+### Пример 1: Сравнение фреймворков
 
 ```
-User: "Сравни LangChain, CrewAI и AutoGen"
+User: "Сравни LangChain и CrewAI"
 → Council mode
-→ 3 Researchers (Deepseek V4 Flash) — по одному на фреймворк
-→ Synthesizer (Mimo V2.5) — сравнительная таблица
-→ Reviewer (Nemotron) — проверка
+→ 2 Researchers (Deepseek + Mimo) — параллельно
+→ Arbiter (Nemotron) — синтез
 ```
 
-### Пример 2: Code Review + Fix
+### Пример 2: Code Pipeline
 
 ```
-User: "Проверь этот код и исправь проблемы"
+User: "Напиши парсер CSV"
 → Pipeline mode
-→ Architect (Big Pickle) — анализ структуры
-→ Researcher (Deepseek) — поиск best practices
-→ Coder (North Mini Code) — исправление
-→ Reviewer (Nemotron) — финальное ревью
+→ Architect (Big Pickle) — дизайн
+→ Coder (North Mini Code) — реализация
+→ Arbiter (Nemotron) — ревью
+```
+
+### Пример 3: Исследование + код
+
+```
+User: "Исследуй Kafka и напиши пример producer/consumer"
+→ Hybrid mode
+→ Researcher (Deepseek) + Coder (North Mini) — параллельно
+→ Arbiter (Nemotron) — синтез
 ```
